@@ -1,0 +1,74 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ── 动画 ────────────────────────────── */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(37, 99, 235, 0.3); }
+  50% { box-shadow: 0 0 24px rgba(37, 99, 235, 0.5), 0 0 48px rgba(59, 130, 246, 0.2); }
+}
+.animate-glow-pulse { animation: glow-pulse 2.5s ease-in-out infinite; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-float-delayed { animation: float 4s ease-in-out 1s infinite; }
+
+@keyframes typewriter-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+/* 鼠标光晕 */
+.hero-glow {
+  position: relative;
+}
+.hero-glow::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 600px; height: 600px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Markdown 渲染 ────────────────────── */
+.prose h1, .prose h2, .prose h3 { margin-top: 1.5em; margin-bottom: 0.5em; }
+.prose table { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: 0.875rem; }
+.prose th, .prose td { border: 1px solid #e5e7eb; padding: 0.5em 0.75em; text-align: left; }
+.dark .prose th, .dark .prose td { border-color: #374151; }
+.prose th { background: #f3f4f6; font-weight: 600; }
+.dark .prose th { background: #1f2937; }
+.prose pre {
+  background: #1e293b; color: #e2e8f0;
+  padding: 1em; border-radius: 8px; overflow-x: auto;
+  font-size: 0.85rem; line-height: 1.6;
+}
+.prose img { max-width: 100%; border-radius: 8px; margin: 1em 0; }
+.prose blockquote {
+  border-left: 3px solid var(--color-blue-500);
+  padding-left: 1em; color: #6b7280; margin: 1em 0;
+}
+
+/* ── 滚动条 ──────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb { background: #4b5563; }

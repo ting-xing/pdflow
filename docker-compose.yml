@@ -1,0 +1,49 @@
+# =============================================================
+# PDFlow — docker-compose.yml
+# =============================================================
+version: "3.9"
+
+services:
+  pdflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pdflow:latest
+    container_name: pdflow
+    restart: unless-stopped
+
+    ports:
+      - "3000:3000"
+
+    volumes:
+      - pdflow_uploads:/app/uploads
+      - pdflow_outputs:/app/outputs
+
+    environment:
+      NITRO_HOST: "0.0.0.0"
+      NITRO_PORT: "3000"
+      # MinerU 解析引擎地址（请根据实际部署修改）
+      MINERU_API_URL: "http://10.1.0.75:8002"
+      # LLM API（请替换为实际密钥）
+      LLM_API_URL: "https://new-api.core.codeon.cn/v1/chat/completions"
+      LLM_API_KEY: "sk-ly2AOrvKjWf3rLlI8f6ngLmn5XEONGrPJ3Cm4qZXM0IWEy1V"
+      LLM_MODEL: "Qwen3.8-27B-FP8"
+
+    # 日志轮转（避免磁盘占满）
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  pdflow_uploads:
+    driver: local
+  pdflow_outputs:
+    driver: local

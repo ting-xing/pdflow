@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output (rebuilt inside container)
+.output/
+.nuxt/
+dist/
+
+# Development
+*.log
+npm-debug.log*
+.npm
+.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Runtime data (mounted as volumes)
+uploads/
+outputs/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Test
+test/
+tests/
+__tests__/
+coverage/
+
+# Misc
+README.md
+LICENSE
+CHANGELOG.md
