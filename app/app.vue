@@ -34,6 +34,9 @@ useSeoMeta({
 
         <!-- Right: CTA + 主题 — flex-1 撑开右侧空间 -->
         <div class="flex-1 flex items-center justify-end gap-2">
+          <a href="https://github.com/ting-xing/pdflow" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex p-1.5 rounded-md text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="GitHub">
+            <UIcon name="i-simple-icons-github" class="w-5 h-5" />
+          </a>
           <NuxtLink to="/tools/extract" class="hidden sm:inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-lg bg-primary-600 text-white animate-glow-pulse hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/25">
             <span class="relative flex h-2 w-2">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />

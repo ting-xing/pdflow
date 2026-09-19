@@ -24,7 +24,7 @@ export async function cleanupExpiredFiles() {
           console.log(`[清理] ${f}`)
         }
       }
-    } catch (e) {}
+    } catch { /* 目录不存在则跳过 */ }
   }
 }
 

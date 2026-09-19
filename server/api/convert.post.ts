@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
     return { file_id, format: 'md', content: markdown, download_url: `/api/download/${file_id}.md` }
   }
   if (target_format === 'txt') {
-    const text = markdown.replace(/[#*`\[\]]/g, '').trim()
+    const text = markdown.replace(/[#*`[\]]/g, '').trim()
     return { file_id, format: 'txt', content: text, download_url: `/api/download/${file_id}.txt` }
   }
   if (target_format === 'html') {

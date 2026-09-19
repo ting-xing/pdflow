@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
       for (const f of files) {
         if (f.includes(fileId)) await unlink(join(dir, f)).catch(() => {})
       }
-    } catch {}
+    } catch { /* 目录不存在则跳过 */ }
   }
 
   return { ok: true }

@@ -12,7 +12,7 @@ const isDeleting = ref(false)
 let timer: ReturnType<typeof setTimeout> | null = null
 
 function typeEffect() {
-  const full = typewriterTexts[textIndex.value]
+  const full = typewriterTexts[textIndex.value]!
   if (!isDeleting.value) {
     currentText.value = full.slice(0, charIndex.value + 1)
     charIndex.value++

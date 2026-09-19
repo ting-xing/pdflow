@@ -1,7 +1,7 @@
 /**
  * GET /api/download/[name] — 下载文件
  */
-import { readFile, readdir, access } from 'node:fs/promises'
+import { readFile, access } from 'node:fs/promises'
 import { join, basename } from 'node:path'
 
 const OUTPUTS_DIR = join(process.cwd(), 'outputs')
@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
       setHeader(event, 'Content-Disposition', `attachment; filename="${encodeURIComponent(safeName)}"`)
       setHeader(event, 'Cache-Control', 'no-cache')
       return content
-    } catch {}
+    } catch { /* 文件不在该目录 */ }
   }
   
   throw createError({ statusCode: 404, message: '文件不存在' })

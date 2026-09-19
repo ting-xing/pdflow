@@ -1,22 +1,31 @@
 <script setup lang="ts">
+import { ref, computed, onMounted, watch } from 'vue'
+
+
 useSeoMeta({
   title: '在线体验 — PDFlow',
   description: '上传 PDF、扫描件、Office 文档，一键提取为 Word、Markdown 等格式。AI 智能处理。',
 })
 
-import { ref, computed, onMounted, watch } from 'vue'
+// ---- 类型 ----
+interface TaskItem {
+  id: string; name: string; status: string; progress: number; message: string; fileId: string
+}
+interface HistoryItem {
+  file_id: string; original_name: string; status: string; created_at: string
+}
 
 const dragOver = ref(false)
 const mounted = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 const sessionId = ref('')
-const queue = ref<any[]>([])
+const queue = ref<TaskItem[]>([])
 const currentFileId = ref('')
 const currentMarkdown = ref('')
 const currentJson = ref('')
 const activeFormat = ref('md')
 const convertedContent = ref('')
-const history = ref<any[]>([])
+const history = ref<HistoryItem[]>([])
 const aiLoading = ref(false)
 const aiResult = ref('')
 const deletingId = ref('')
@@ -91,7 +100,6 @@ function getSessionId() {
   if (!id) { id = 'guest_' + Math.random().toString(36).slice(2, 12); localStorage.setItem('pdflow_session', id) }
   return id
 }
-function triggerUpload() { fileInput.value?.click() }
 function handleFileSelect(e: Event) {
   const files = (e.target as HTMLInputElement).files
   if (files?.length) uploadFiles(files)
@@ -130,7 +138,7 @@ async function uploadFiles(files: FileList) {
         if (s.status === 'failed') { task.status = 'failed'; task.message = '❌ 失败'; return }
       }
       task.status = 'failed'; task.message = '❌ 超时'
-    } catch (e: any) { task.status = 'failed'; task.message = '❌ ' + (e.message || '未知错误') }
+    } catch (e: unknown) { task.status = 'failed'; task.message = '❌ ' + ((e as Error).message || '未知错误') }
   }
 }
 
@@ -146,7 +154,7 @@ async function switchFormat(format: string) {
   try {
     const r = await $fetch('/api/convert', { method: 'POST', body: { file_id: currentFileId.value, target_format: format } }) as any
     convertedContent.value = r.content || ''
-  } catch (e: any) { convertedContent.value = '转换失败: ' + e.message }
+  } catch (e: unknown) { convertedContent.value = '转换失败: ' + (e as Error).message }
 }
 
 function downloadResult() {
@@ -162,11 +170,11 @@ async function aiAction(actionId: string) {
   try {
     const r = await $fetch('/api/ai/action', { method: 'POST', body: { file_id: currentFileId.value, action: actionId } }) as any
     aiResult.value = r.result || '无返回'
-  } catch (e: any) { aiResult.value = '❌ ' + (e.message || 'AI 调用失败') } finally { aiLoading.value = false }
+  } catch (e: unknown) { aiResult.value = '❌ ' + ((e as Error).message || 'AI 调用失败') } finally { aiLoading.value = false }
 }
 
 async function loadHistory() {
-  try { const d = await $fetch(`/api/history?sessionId=${sessionId.value}`) as any; history.value = d.history || [] } catch {}
+  try { const d = await $fetch(`/api/history?sessionId=${sessionId.value}`) as any; history.value = d.history || [] } catch { /* 静默失败 */ }
 }
 
 async function deleteHistory(fileId: string) {
@@ -175,7 +183,7 @@ async function deleteHistory(fileId: string) {
     await $fetch('/api/history', { method: 'DELETE', body: { sessionId: sessionId.value, fileId } })
     history.value = history.value.filter(h => h.file_id !== fileId)
     if (currentFileId.value === fileId) { currentFileId.value = ''; currentMarkdown.value = '' }
-  } catch {}
+  } catch { /* 静默失败 */ }
   deletingId.value = ''
 }
 
@@ -206,9 +214,9 @@ onMounted(async () => { sessionId.value = getSessionId(); await loadHistory(); m
 
       <!-- 上传区 -->
       <label
-        @drop.prevent="handleDrop" @dragover.prevent="dragOver = true" @dragleave="dragOver = false"
-        class="block border-2 border-dashed rounded-2xl p-10 sm:p-16 text-center cursor-pointer transition-all mb-10"
-        :class="dragOver ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 scale-[1.01]' : 'border-gray-300 dark:border-gray-600 hover:border-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'"
+        class="block border-2 border-dashed rounded-2xl p-10 sm:p-16 text-center cursor-pointer transition-all mb-10" :class="dragOver ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 scale-[1.01]' : 'border-gray-300 dark:border-gray-600 hover:border-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'" @drop.prevent="handleDrop"
+        @dragover.prevent="dragOver = true"
+        @dragleave="dragOver = false"
       >
         <input ref="fileInput" type="file" accept=".pdf,.docx,.pptx,.xlsx" multiple class="hidden" @change="handleFileSelect">
         <UIcon name="i-lucide-cloud-upload" class="w-16 h-16 text-primary-400 mx-auto mb-4" />
@@ -222,9 +230,9 @@ onMounted(async () => { sessionId.value = getSessionId(); await loadHistory(); m
         <button
           v-for="sample in samples"
           :key="sample.name"
-          @click="trySample(sample.url, sample.name)"
           :disabled="queue.length > 0"
           class="inline-flex items-center gap-1 px-3 py-1 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-primary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+          @click="trySample(sample.url, sample.name)"
         >
           <UIcon :name="sample.icon" class="w-4 h-4" />
           {{ sample.label }}
@@ -285,11 +293,11 @@ onMounted(async () => { sessionId.value = getSessionId(); await loadHistory(); m
             <div class="flex items-center gap-2">
               <UIcon name="i-lucide-sparkles" class="w-4 h-4 text-purple-500" />
               <span class="text-sm font-semibold">AI 一键处理</span>
-              <UBadge variant="subtle" size="xs" color="purple">预设动作 · 精准可控</UBadge>
+              <UBadge variant="subtle" size="xs" color="primary">预设动作 · 精准可控</UBadge>
             </div>
           </template>
           <div class="flex flex-wrap gap-2 mb-4">
-            <UButton v-for="act in aiActions" :key="act.id" variant="ghost" size="xs" :disabled="aiLoading" @click="aiAction(act.id)" class="hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:text-purple-700 dark:hover:text-purple-300 transition-colors">
+            <UButton v-for="act in aiActions" :key="act.id" variant="ghost" size="xs" :disabled="aiLoading" class="hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:text-purple-700 dark:hover:text-purple-300 transition-colors" @click="aiAction(act.id)">
               <UIcon :name="act.icon" class="w-3.5 h-3.5 mr-1" /> {{ act.name }}
             </UButton>
           </div>
@@ -307,17 +315,19 @@ onMounted(async () => { sessionId.value = getSessionId(); await loadHistory(); m
           </h3>
         </div>
         <div class="space-y-1">
-          <div v-for="item in history" :key="item.file_id"
+          <div
+v-for="item in history" :key="item.file_id"
                class="flex items-center gap-3 px-4 py-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors group">
             <UIcon name="i-lucide-file-text" class="w-5 h-5 text-gray-400 shrink-0" />
-            <span @click="loadResult(item.file_id)" class="flex-1 truncate text-sm cursor-pointer hover:text-primary-600 transition-colors">{{ item.original_name }}</span>
+            <span class="flex-1 truncate text-sm cursor-pointer hover:text-primary-600 transition-colors" @click="loadResult(item.file_id)">{{ item.original_name }}</span>
             <span class="text-xs text-gray-400 shrink-0 hidden sm:inline">{{ formatTime(item.created_at) }}</span>
             <UBadge :color="item.status === 'completed' ? 'success' : 'error'" variant="subtle" size="xs" class="shrink-0">
               {{ item.status === 'completed' ? '完成' : '失败' }}
             </UBadge>
-            <button @click="deleteHistory(item.file_id)" :disabled="deletingId === item.file_id"
-                    class="shrink-0 p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
-                    title="删除记录">
+            <button
+:disabled="deletingId === item.file_id" class="shrink-0 p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
+                    title="删除记录"
+                    @click="deleteHistory(item.file_id)">
               <UIcon name="i-lucide-trash-2" class="w-4 h-4" />
             </button>
           </div>
